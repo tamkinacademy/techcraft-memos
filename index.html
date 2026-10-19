@@ -1,0 +1,654 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="অর্ডার মেমো আর কুরিয়ার স্লিপ ১০ সেকেন্ডে। ফেসবুক সেলারদের জন্য, বাংলায়।">
+<meta name="theme-color" content="#07120e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect x='6' y='6' width='188' height='188' rx='44' fill='%2307120e' stroke='%23e9b949' stroke-width='6'/%3E%3Crect x='24' y='62' width='60' height='22' rx='6' fill='%23e9b949'/%3E%3Crect x='43' y='62' width='22' height='82' rx='6' fill='%23e9b949'/%3E%3Cpath d='M166 76A36 36 0 1 0 166 124' fill='none' stroke='%233be28f' stroke-width='22' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;700;800&family=Hind+Siliguri:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: phone-first tool. Sticky header with free-memo counter, four tabs at the bottom (new order, orders, accounts, settings). New order = form + live paper preview of the memo or courier slip. Dark-first with the TechCraft palette; the paper itself is always white because it is printed. */
+:root{
+  --bg:#07120e; --bg2:#0b1914; --card:#10231b; --card2:#143026; --line:#1f3a2d;
+  --fg:#e9f3ee; --muted:#98ada2; --gold:#e9b949; --goldink:#241a00; --mint:#3be28f; --mintink:#032012;
+  --shade:rgba(0,0,0,.62); --bad:#ff8d80; --glow:rgba(59,226,143,.14);
+  --display:'Anek Bangla','Hind Siliguri',system-ui,sans-serif;
+  --body:'Hind Siliguri',system-ui,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){
+  --bg:#f3f7f4; --bg2:#e9f1ec; --card:#ffffff; --card2:#eef5f0; --line:#d2e0d7;
+  --fg:#0c1a13; --muted:#53685b; --gold:#a8730a; --goldink:#fff8e6; --mint:#0d8c53; --mintink:#ffffff;
+  --shade:rgba(10,25,18,.45); --bad:#b3261e; --glow:rgba(13,140,83,.12); color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#f3f7f4; --bg2:#e9f1ec; --card:#ffffff; --card2:#eef5f0; --line:#d2e0d7;
+  --fg:#0c1a13; --muted:#53685b; --gold:#a8730a; --goldink:#fff8e6; --mint:#0d8c53; --mintink:#ffffff;
+  --shade:rgba(10,25,18,.45); --bad:#b3261e; --glow:rgba(13,140,83,.12); color-scheme:light}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:17px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px}
+body.lock{overflow:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--bg)}
+.wrap{max-width:1040px;margin:0 auto}
+h1,h2,h3,h4{font-family:var(--display);line-height:1.2;margin:0;text-wrap:balance}
+p{margin:0}
+:focus-visible{outline:2px solid var(--mint);outline-offset:3px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--mint)}
+.btn{font:inherit;font-weight:700;cursor:pointer;border:1px solid transparent;border-radius:12px;padding:12px 20px;background:var(--gold);color:var(--goldink);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:transform .2s,filter .2s,border-color .2s}
+.btn:hover{filter:brightness(1.07);transform:translateY(-1px)}
+.btn.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--mint)}
+.btn.mint{background:var(--mint);color:var(--mintink)}
+.btn.sm{padding:8px 14px;font-size:15px;border-radius:10px}
+.btn.danger{background:transparent;color:var(--bad);border-color:var(--bad)}
+.ic{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+/* header */
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:50;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-inline:calc(-1*max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px))}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:10px}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand svg{width:38px;height:38px;flex:none}
+.brand b{font-family:var(--display);font-size:19px;font-weight:800;display:block;line-height:1.1}
+.brand small{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;display:block}
+.pill{font-family:var(--mono);font-size:12.5px;padding:6px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card);color:var(--muted);white-space:nowrap;cursor:pointer}
+.pill.pro{color:var(--mint);border-color:var(--mint)}
+.pill.low{color:var(--gold);border-color:var(--gold)}
+
+/* views */
+main{padding-block:22px}
+.view{display:grid;gap:18px}
+.view[hidden]{display:none}
+.ttl{display:grid;gap:6px}
+.ttl h1{font-size:clamp(26px,5vw,36px);font-weight:800}
+.ttl p{color:var(--muted);font-size:16px}
+.cols2{display:grid;grid-template-columns:1.05fr .95fr;gap:22px;align-items:start}
+@media(max-width:860px){.cols2{grid-template-columns:1fr}}
+.card{border-radius:18px;border:1px solid var(--line);background:var(--card);padding:20px;display:grid;gap:14px;min-width:0}
+.card h3{font-size:18px}
+.fld{display:grid;gap:6px;min-width:0}
+label,.lb{font-weight:600;font-size:15px}
+input,select,textarea{font:inherit;color:var(--fg);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;width:100%;min-width:0}
+input:focus,select:focus,textarea:focus{border-color:var(--mint);outline:none}
+input[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--bad)}
+textarea{min-height:76px;resize:vertical}
+.err{font-size:14px;color:var(--bad)}
+.hint{font-size:14px;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:420px){.row2.keep{grid-template-columns:1fr 1fr}.row2:not(.keep){grid-template-columns:1fr}}
+.it{display:grid;grid-template-columns:1fr 58px 84px 36px;gap:8px;align-items:center}
+.it .rmv{width:36px;height:42px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--muted);cursor:pointer;font-size:18px}
+.itl{display:grid;grid-template-columns:1fr 58px 84px 36px;gap:8px;font-size:13px;color:var(--muted);font-family:var(--mono)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font:inherit;font-size:14.5px;font-weight:600;cursor:pointer;padding:6px 14px;border-radius:99px;border:1px solid var(--line);background:var(--bg2);color:var(--muted)}
+.chip:hover{border-color:var(--mint);color:var(--fg)}
+.chip[aria-pressed="true"]{background:var(--mint);color:var(--mintink);border-color:var(--mint)}
+.sum{display:grid;gap:6px;padding:14px 16px;border-radius:14px;background:var(--bg2);border:1px solid var(--line);font-size:16px}
+.sum div{display:flex;justify-content:space-between;gap:12px}
+.sum .due{border-top:1px dashed var(--line);padding-top:8px;margin-top:2px;font-weight:700}
+.sum .due b{font-family:var(--display);font-size:24px;color:var(--gold)}
+.setup{border-color:var(--gold);background:var(--card2)}
+
+/* paper */
+.paperwrap{display:grid;gap:12px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px)}
+@media(max-width:860px){.paperwrap{position:static}}
+.seg{display:flex;gap:8px}
+.paper{background:#ffffff;color:#14201a;border-radius:6px;padding:20px 18px;font-family:'Hind Siliguri',system-ui,sans-serif;font-size:14.5px;line-height:1.5;box-shadow:0 12px 40px rgba(0,0,0,.28);width:100%;max-width:440px;margin-inline:auto}
+.paper *{box-sizing:border-box}
+.pm-h{display:flex;gap:12px;align-items:center;padding-bottom:10px;border-bottom:2px solid #14201a}
+.pm-logo{width:48px;height:48px;border-radius:10px;background:#14201a;color:#e9b949;display:grid;place-items:center;font-weight:800;font-size:24px;flex:none;overflow:hidden}
+.pm-logo img{width:100%;height:100%;object-fit:cover}
+.pm-h b{font-size:19px;font-weight:800;display:block;line-height:1.2}
+.pm-h span{font-size:13px;color:#4b5c53;display:block}
+.pm-t{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;font-size:13px;color:#4b5c53;gap:8px;flex-wrap:wrap}
+.pm-t b{font-size:16px;color:#14201a}
+.pm-c{margin-top:10px;padding:9px 11px;background:#f2f5f3;border-radius:6px;font-size:14px}
+.pm-c b{font-weight:700}
+.pm-tb{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+.pm-tb th{text-align:left;font-size:12px;color:#4b5c53;font-weight:600;border-bottom:1px solid #cfd8d3;padding:4px 2px}
+.pm-tb td{padding:5px 2px;border-bottom:1px solid #e6ece8;vertical-align:top}
+.pm-tb .r{text-align:right;white-space:nowrap}
+.pm-s{margin-top:8px;display:grid;gap:3px;font-size:14px}
+.pm-s div{display:flex;justify-content:space-between;gap:10px}
+.pm-due{margin-top:8px;padding:10px 12px;background:#14201a;color:#fff;border-radius:6px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.pm-due b{font-size:22px;color:#e9b949}
+.pm-f{margin-top:12px;text-align:center;font-size:13px;color:#4b5c53}
+.pm-note{margin-top:8px;font-size:13px;color:#4b5c53}
+.sl-from{font-size:12.5px;color:#4b5c53;border-bottom:1px dashed #9aa8a0;padding-bottom:8px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.sl-to{margin-top:10px;font-size:13px;color:#4b5c53}
+.sl-n{font-size:26px;font-weight:800;line-height:1.2}
+.sl-p{font-size:22px;font-weight:700;letter-spacing:.02em}
+.sl-a{font-size:18px;font-weight:600;margin-top:4px;word-break:break-word}
+.sl-cod{margin-top:14px;border:3px solid #14201a;border-radius:8px;padding:10px 12px;text-align:center}
+.sl-cod span{font-size:13px;color:#4b5c53;display:block}
+.sl-cod b{font-size:34px;font-weight:800;line-height:1.1}
+.sl-m{margin-top:10px;font-size:13px;color:#4b5c53;display:flex;justify-content:space-between;gap:8px}
+
+/* orders */
+.search{position:sticky;top:calc(env(safe-area-inset-top,0px) + 62px);z-index:5}
+.ocard{border-radius:16px;border:1px solid var(--line);background:var(--card);padding:16px;display:grid;gap:10px;min-width:0}
+.ocard .h{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.ocard .h b{font-family:var(--display);font-size:18px}
+.ocard .h span{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.ocard .m{font-size:15px;color:var(--muted)}
+.ocard .money{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.ocard .money b{font-family:var(--display);font-size:20px;color:var(--gold)}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.acts select{width:auto;padding:8px 10px;font-size:15px}
+.st-new{color:var(--gold)}.st-sent{color:var(--mint)}.st-done{color:var(--mint)}.st-ret{color:var(--bad)}
+.empty{padding:34px 20px;border-radius:18px;border:1px dashed var(--line);text-align:center;color:var(--muted);display:grid;gap:12px;justify-items:center}
+
+/* stats */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{padding:16px;border-radius:16px;border:1px solid var(--line);background:var(--card);display:grid;gap:4px}
+.tile small{font-size:14px;color:var(--muted)}
+.tile b{font-family:var(--display);font-size:26px;line-height:1.1}
+.tile.g b{color:var(--gold)}.tile.m b{color:var(--mint)}
+.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;align-items:end;height:150px;padding-top:8px}
+.bar{display:grid;gap:6px;align-content:end;height:100%;text-align:center;font-size:12px;color:var(--muted)}
+.bar i{display:block;background:var(--mint);border-radius:6px 6px 2px 2px;min-height:3px;opacity:.9}
+.bar.today i{background:var(--gold)}
+.bar b{font-family:var(--mono);font-weight:500;font-size:11px;color:var(--fg)}
+
+/* bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:55;background:var(--bg);border-top:1px solid var(--line);display:flex;justify-content:center;
+  padding:6px max(8px,env(safe-area-inset-right,0px)) max(6px,env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px))}
+nav.tabs .in{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;width:min(560px,100%)}
+nav.tabs button{font:inherit;font-size:13px;font-weight:600;background:none;border:0;color:var(--muted);cursor:pointer;display:grid;justify-items:center;gap:2px;padding:8px 4px;border-radius:12px}
+nav.tabs button[aria-current="page"]{color:var(--mint);background:var(--card)}
+nav.tabs .ic{width:23px;height:23px}
+
+/* overlays */
+.ov{position:fixed;inset:0;z-index:100;background:var(--shade);backdrop-filter:blur(4px);display:grid;place-items:center;
+  padding:max(14px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+.md{position:relative;width:min(520px,100%);max-height:100%;overflow:auto;border-radius:20px;background:var(--bg);border:1px solid var(--line);padding:22px;display:grid;gap:14px}
+.md h3{font-size:22px;font-weight:800;padding-right:44px}
+.x{position:absolute;top:12px;right:12px;width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);font-size:20px;cursor:pointer}
+.pay{padding:14px 16px;border-radius:14px;background:var(--card);border:1px solid var(--gold);display:grid;gap:8px;font-size:15px;color:var(--muted)}
+.pay b{font-family:var(--mono);font-weight:500;color:var(--fg);font-size:18px;letter-spacing:.04em}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:120;background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:99px;font-weight:600;font-size:15px;max-width:calc(100% - 32px);text-align:center}
+#pa{display:none}
+@media print{
+  body>*:not(#pa){display:none!important}
+  body{padding:0!important;background:#fff!important}
+  #pa{display:block}
+  #pa .paper{box-shadow:none;max-width:none;border-radius:0}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important;transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg viewBox="0 0 200 200" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#12342a"/><stop offset="1" stop-color="#07120e"/></linearGradient></defs><rect x="6" y="6" width="188" height="188" rx="44" fill="url(#lg)" stroke="#e9b949" stroke-width="6"/><rect x="24" y="62" width="60" height="22" rx="6" fill="#e9b949"/><rect x="43" y="62" width="22" height="82" rx="6" fill="#e9b949"/><path d="M166 76 A36 36 0 1 0 166 124" fill="none" stroke="#3be28f" stroke-width="22" stroke-linecap="round"/></svg>
+      <span><b>সেলার মেমো</b><small>by TechCraft</small></span>
+    </div>
+    <button class="pill" type="button" id="lic">ফ্রি</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="view" id="v-new">
+    <div class="ttl"><div class="eyebrow">নতুন অর্ডার</div><h1>১০ সেকেন্ডে মেমো তৈরি</h1><p>অর্ডারের তথ্য লিখুন। পাশেই মেমো তৈরি হতে দেখবেন।</p></div>
+    <div class="card setup" id="setupcard" hidden>
+      <h3>আগে দোকানের তথ্য দিন</h3>
+      <p class="hint">মেমোর মাথায় দোকানের নাম আর নম্বর যাবে। একবার দিলেই হবে।</p>
+      <div><button class="btn" type="button" data-tab="set">দোকানের তথ্য দিন</button></div>
+    </div>
+    <div class="cols2">
+      <form class="card" id="f" autocomplete="off" novalidate>
+        <h3>ক্রেতা</h3>
+        <div class="fld"><label for="cn">নাম</label><input id="cn" placeholder="যেমন: রাফি আহমেদ"><div class="err" id="e-cn"></div></div>
+        <div class="fld"><label for="cm">মোবাইল নম্বর</label><input id="cm" inputmode="tel" placeholder="01XXXXXXXXX"><div class="err" id="e-cm"></div></div>
+        <div class="fld"><label for="ca">ঠিকানা</label><textarea id="ca" placeholder="গ্রাম/মহল্লা, থানা, জেলা"></textarea><div class="err" id="e-ca"></div></div>
+        <h3>পণ্য</h3>
+        <div class="itl"><span>পণ্যের নাম</span><span>পরিমাণ</span><span>দাম</span><span></span></div>
+        <div id="items" style="display:grid;gap:8px"></div>
+        <div><button class="btn ghost sm" type="button" id="addit">+ আরেকটা পণ্য</button></div>
+        <div class="err" id="e-it"></div>
+        <datalist id="dl"></datalist>
+        <div class="row2 keep">
+          <div class="fld"><label for="cd">ডেলিভারি চার্জ</label><input id="cd" inputmode="numeric" placeholder="০"></div>
+          <div class="fld"><label for="cx">ছাড়</label><input id="cx" inputmode="numeric" placeholder="০"></div>
+        </div>
+        <div class="chips" id="dch" hidden></div>
+        <div class="fld"><label for="ad">অগ্রিম পেয়েছেন</label><input id="ad" inputmode="numeric" placeholder="০"></div>
+        <div class="fld"><label for="cnote">নোট (ইচ্ছা হলে)</label><input id="cnote" placeholder="যেমন: সকালে ডেলিভারি দেবেন"></div>
+        <div class="sum" id="sum"></div>
+        <div class="acts"><button class="btn" type="submit" id="mk">মেমো তৈরি করুন</button><button class="btn ghost" type="button" id="demo">উদাহরণ দিয়ে দেখুন</button><button class="btn ghost" type="button" id="clr">মুছুন</button></div>
+        <div class="hint" id="lh"></div>
+      </form>
+      <div class="paperwrap">
+        <div class="seg" role="group" aria-label="কাগজের ধরন"><button class="chip" type="button" data-fmt="memo" aria-pressed="true">মেমো</button><button class="chip" type="button" data-fmt="slip" aria-pressed="false">কুরিয়ার স্লিপ</button></div>
+        <div id="live"></div>
+        <p class="hint" style="text-align:center">এটা সরাসরি প্রিভিউ। তৈরি করার পর ছবি বা প্রিন্ট নিতে পারবেন।</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="v-list" hidden>
+    <div class="ttl"><div class="eyebrow">অর্ডার তালিকা</div><h1>সব অর্ডার</h1><p>অর্ডারের অবস্থা বদলান, মেমো আবার দেখুন, ক্রেতাকে বার্তা পাঠান।</p></div>
+    <div class="search"><input id="q" type="search" placeholder="নাম, নম্বর বা অর্ডার নম্বর দিয়ে খুঁজুন"></div>
+    <div class="chips" id="sf" role="group" aria-label="অবস্থা"></div>
+    <div id="ol" style="display:grid;gap:12px"></div>
+  </section>
+
+  <section class="view" id="v-stats" hidden>
+    <div class="ttl"><div class="eyebrow">হিসাব</div><h1>বিক্রির হিসাব</h1><p>ফেরত দেওয়া অর্ডার বাদ দিয়ে হিসাব করা হয়।</p></div>
+    <div id="st" style="display:grid;gap:18px"></div>
+  </section>
+
+  <section class="view" id="v-set" hidden>
+    <div class="ttl"><div class="eyebrow">সেটিংস</div><h1>দোকানের তথ্য</h1><p>এই তথ্য প্রতিটা মেমোর মাথায় ছাপা হবে।</p></div>
+    <div class="cols2">
+      <form class="card" id="sf2" autocomplete="off" novalidate>
+        <div class="fld"><label for="s-shop">দোকানের নাম</label><input id="s-shop" placeholder="যেমন: রাফির ফ্যাশন"><div class="err" id="e-shop"></div></div>
+        <div class="fld"><label for="s-phone">মোবাইল নম্বর</label><input id="s-phone" inputmode="tel" placeholder="01XXXXXXXXX"><div class="err" id="e-phone"></div></div>
+        <div class="fld"><label for="s-addr">ঠিকানা (ইচ্ছা হলে)</label><input id="s-addr" placeholder="যেমন: মিরপুর, ঢাকা"></div>
+        <div class="fld"><label for="s-note">মেমোর নিচের লেখা</label><input id="s-note" placeholder="ধন্যবাদ, আবার আসবেন"></div>
+        <div class="row2 keep">
+          <div class="fld"><label for="s-in">ডেলিভারি চার্জ ১</label><input id="s-in" inputmode="numeric" placeholder="যেমন: ৬০"></div>
+          <div class="fld"><label for="s-out">ডেলিভারি চার্জ ২</label><input id="s-out" inputmode="numeric" placeholder="যেমন: ১২০"></div>
+        </div>
+        <div class="fld"><label for="s-pre">অর্ডার নম্বরের শুরু</label><input id="s-pre" maxlength="6" placeholder="ORD"></div>
+        <div class="fld"><span class="lb">লোগো (ইচ্ছা হলে)</span><input id="s-logo" type="file" accept="image/*"><div class="acts"><span class="hint" id="lg-s"></span><button class="btn ghost sm" type="button" id="lg-x" hidden>লোগো সরান</button></div></div>
+        <div class="acts"><button class="btn" type="submit">সেভ করুন</button></div>
+      </form>
+      <div style="display:grid;gap:18px">
+        <div class="card" id="licard"></div>
+        <div class="card">
+          <h3>ব্যাকআপ</h3>
+          <p class="hint">অর্ডারের তথ্য শুধু এই ফোনের ব্রাউজারে থাকে। ব্রাউজারের ডাটা মুছলে সব চলে যাবে। তাই মাঝে মাঝে ব্যাকআপ নিয়ে রাখুন।</p>
+          <div class="acts"><button class="btn ghost" type="button" id="bk">ব্যাকআপ নিন</button><label class="btn ghost" for="rs" style="cursor:pointer">ব্যাকআপ ফিরিয়ে আনুন</label><input id="rs" type="file" accept="application/json,.json" hidden></div>
+          <div class="hint" id="bk-s"></div>
+        </div>
+        <div class="card">
+          <h3>সব তথ্য মুছুন</h3>
+          <p class="hint">সব অর্ডার আর সেটিংস মুছে যাবে। আগে ব্যাকআপ নিয়ে নিন।</p>
+          <div class="acts"><button class="btn danger" type="button" id="wipe">সব মুছুন</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs" aria-label="প্রধান মেনু"><div class="in">
+  <button type="button" data-tab="new" aria-current="page"><svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>নতুন অর্ডার</button>
+  <button type="button" data-tab="list"><svg class="ic" viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h9"/></svg>অর্ডার</button>
+  <button type="button" data-tab="stats"><svg class="ic" viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>হিসাব</button>
+  <button type="button" data-tab="set"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>সেটিংস</button>
+</div></nav>
+
+<div class="ov" id="ovm" hidden>
+  <div class="md" role="dialog" aria-modal="true" aria-labelledby="mt1" style="width:min(500px,100%)">
+    <button class="x" type="button" id="mx" aria-label="বন্ধ করুন">×</button>
+    <h3 id="mt1">মেমো তৈরি হয়েছে</h3>
+    <div class="seg" role="group" aria-label="কাগজের ধরন"><button class="chip" type="button" data-mfmt="memo" aria-pressed="true">মেমো</button><button class="chip" type="button" data-mfmt="slip" aria-pressed="false">কুরিয়ার স্লিপ</button></div>
+    <div id="mpaper"></div>
+    <div class="acts"><button class="btn mint" type="button" id="mimg">ছবি হিসেবে পাঠান</button><button class="btn ghost" type="button" id="mprint">প্রিন্ট</button><a class="btn ghost" id="mwa" href="#" target="_blank" rel="noopener">ক্রেতাকে বার্তা</a></div>
+    <div class="hint" id="mhint"></div>
+  </div>
+</div>
+
+<div class="ov" id="ovp" hidden>
+  <div class="md" role="dialog" aria-modal="true" aria-labelledby="pt1">
+    <button class="x" type="button" id="px" aria-label="বন্ধ করুন">×</button>
+    <h3 id="pt1">সীমাহীন মেমোর জন্য আনলক করুন</h3>
+    <p id="ptx" style="color:var(--muted)"></p>
+    <div class="pay"><span>এই নগদ নম্বরে টাকা পাঠান:</span><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><b id="pn"></b><button class="btn ghost sm" type="button" id="pc">কপি</button></div></div>
+    <a class="btn mint" id="pw" href="#" target="_blank" rel="noopener">টাকা পাঠিয়ে WhatsApp-এ জানান</a>
+    <div class="fld"><label for="pcode">আনলক কোড</label><input id="pcode" inputmode="numeric" placeholder="৬ সংখ্যার কোড"><div class="err" id="e-pcode"></div></div>
+    <div class="acts"><button class="btn" type="button" id="pu">আনলক করুন</button></div>
+  </div>
+</div>
+
+<div id="pa" aria-hidden="true"></div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+/* ===== আপনার সেটিংস (বিক্রেতা TechCraft) ===== */
+var APP = {
+  freeMemos: 10,                 /* ফ্রিতে কয়টা মেমো */
+  price: '৳২৯৯',                /* একবারের দাম */
+  nagad: '01603239138',
+  whatsapp: '8801942319608',     /* কোড চাইতে এই নম্বরে মেসেজ যাবে */
+  salt: '4c01001c84fb'               /* admin.html-এর সাথে একই রাখুন, কাউকে দেবেন না */
+};
+var KEY = 'tc-memo-v1';
+var STATUS = [['new','নতুন','st-new'],['sent','পাঠানো হয়েছে','st-sent'],['done','ডেলিভারি হয়েছে','st-done'],['ret','ফেরত','st-ret']];
+
+var $ = function(i){ return document.getElementById(i); };
+var esc = function(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+var bn = function(n){ try { return Number(n).toLocaleString('bn-BD'); } catch(e){ return String(n); } };
+var BD = {'০':'0','১':'1','২':'2','৩':'3','৪':'4','৫':'5','৬':'6','৭':'7','৮':'8','৯':'9'};
+var num = function(v){ var s = String(v==null?'':v).replace(/[০-৯]/g,function(c){ return BD[c]; }).replace(/[,\s৳]/g,''); var n = parseFloat(s); return isFinite(n)&&n>0 ? n : 0; };
+var phone11 = function(v){ var s = String(v||'').replace(/[০-৯]/g,function(c){ return BD[c]; }).replace(/[\s-]/g,''); s = s.replace(/^\+?88/,''); return s; };
+var okPhone = function(v){ return /^01[3-9]\d{8}$/.test(phone11(v)); };
+function fnv(s){ var x = 2166136261; for (var i=0;i<s.length;i++){ x ^= s.charCodeAt(i); x = Math.imul(x,16777619)>>>0; } return x>>>0; }
+function codeFor(ph){ return String(100000 + (fnv(APP.salt+'|'+phone11(ph)) % 900000)); }
+
+var S = { settings:{shop:'',phone:'',addr:'',note:'ধন্যবাদ, আবার আসবেন',pre:'ORD',chIn:0,chOut:0,logo:'',code:''}, orders:[], created:0, nextNo:1 };
+function load(){ try { var v = JSON.parse(localStorage.getItem(KEY)||'null'); if (v && v.settings){ S = v; } } catch(e){} }
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){ toast('ফোনে সেভ করা যাচ্ছে না, ব্যাকআপ নিয়ে রাখুন।'); } }
+function pro(){ return !!(S.settings.code && S.settings.phone && S.settings.code===codeFor(S.settings.phone)); }
+function left(){ return Math.max(0, APP.freeMemos - S.created); }
+var tt;
+function toast(t){ var el = $('toast'); el.textContent = t; el.hidden = false; clearTimeout(tt); tt = setTimeout(function(){ el.hidden = true; }, 2600); }
+
+/* ===== হিসাব ===== */
+function calc(o){
+  var sub = o.items.reduce(function(s,i){ return s + i.q*i.p; },0);
+  var total = Math.max(0, sub + (o.del||0) - (o.disc||0));
+  return { sub:sub, total:total, due:Math.max(0,total-(o.adv||0)) };
+}
+var money = function(n){ return '৳'+bn(Math.round(n*100)/100); };
+var fdate = function(ts){ try { return new Date(ts).toLocaleDateString('bn-BD',{day:'numeric',month:'long',year:'numeric'}); } catch(e){ return ''; } };
+var ftime = function(ts){ try { return new Date(ts).toLocaleTimeString('bn-BD',{hour:'numeric',minute:'2-digit'}); } catch(e){ return ''; } };
+var ono = function(o){ return (S.settings.pre||'ORD')+'-'+String(o.no).padStart(4,'0'); };
+
+/* ===== কাগজ (মেমো ও স্লিপ) ===== */
+function logoHTML(){
+  var s = S.settings;
+  if (s.logo) return '<div class="pm-logo"><img alt="" src="'+esc(s.logo)+'"></div>';
+  var ch = (s.shop||'দো').trim().charAt(0) || 'দো';
+  return '<div class="pm-logo">'+esc(ch)+'</div>';
+}
+function memoHTML(o, example){
+  var s = S.settings, c = calc(o);
+  var rows = o.items.filter(function(i){ return i.n || i.p; }).map(function(i){
+    return '<tr><td>'+esc(i.n||'পণ্য')+'</td><td class="r">'+bn(i.q)+'</td><td class="r">'+money(i.p)+'</td><td class="r">'+money(i.q*i.p)+'</td></tr>'; }).join('')
+    || '<tr><td colspan="4" style="color:#7a8a81">পণ্য যোগ করলে এখানে দেখাবে</td></tr>';
+  return '<div class="paper"><div class="pm-h">'+logoHTML()+'<div><b>'+esc(s.shop||'আপনার দোকানের নাম')+'</b><span>'+esc(s.phone||'মোবাইল নম্বর')+(s.addr?' · '+esc(s.addr):'')+'</span></div></div>'
+    +'<div class="pm-t"><b>অর্ডার মেমো</b><span>'+esc(o.no?ono(o):'#'+(S.settings.pre||'ORD')+'-'+String(S.nextNo).padStart(4,'0'))+' · '+esc(fdate(o.ts||Date.now()))+'</span></div>'
+    +'<div class="pm-c"><b>'+esc(o.cust.name||'ক্রেতার নাম')+'</b><br>'+esc(o.cust.phone||'ক্রেতার নম্বর')+'<br>'+esc(o.cust.addr||'ঠিকানা')+'</div>'
+    +'<table class="pm-tb"><thead><tr><th>পণ্য</th><th class="r">পরিমাণ</th><th class="r">দাম</th><th class="r">মোট</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<div class="pm-s"><div><span>পণ্যের দাম</span><span>'+money(c.sub)+'</span></div>'
+    +(o.del?'<div><span>ডেলিভারি চার্জ</span><span>'+money(o.del)+'</span></div>':'')
+    +(o.disc?'<div><span>ছাড়</span><span>− '+money(o.disc)+'</span></div>':'')
+    +'<div><b>মোট</b><b>'+money(c.total)+'</b></div>'
+    +(o.adv?'<div><span>অগ্রিম পাওয়া গেছে</span><span>− '+money(o.adv)+'</span></div>':'')+'</div>'
+    +'<div class="pm-due"><span>'+(c.due>0?'ডেলিভারির সময় দিতে হবে':'সম্পূর্ণ পরিশোধিত')+'</span><b>'+money(c.due)+'</b></div>'
+    +(o.note?'<div class="pm-note">নোট: '+esc(o.note)+'</div>':'')
+    +(s.note?'<div class="pm-f">'+esc(s.note)+'</div>':'')+'</div>';
+}
+function slipHTML(o){
+  var s = S.settings, c = calc(o), n = o.items.filter(function(i){ return i.n||i.p; }).length;
+  return '<div class="paper"><div class="sl-from"><span><b>প্রেরক:</b> '+esc(s.shop||'দোকানের নাম')+'</span><span>'+esc(s.phone||'নম্বর')+'</span></div>'
+    +'<div class="sl-to">প্রাপক</div><div class="sl-n">'+esc(o.cust.name||'ক্রেতার নাম')+'</div><div class="sl-p">'+esc(o.cust.phone||'01XXXXXXXXX')+'</div><div class="sl-a">'+esc(o.cust.addr||'ঠিকানা')+'</div>'
+    +'<div class="sl-cod"><span>'+(c.due>0?'ক্যাশ নিন':'টাকা নেওয়া লাগবে না')+'</span><b>'+(c.due>0?money(c.due):'পরিশোধিত')+'</b></div>'
+    +'<div class="sl-m"><span>'+esc(o.no?ono(o):'#'+(S.settings.pre||'ORD')+'-'+String(S.nextNo).padStart(4,'0'))+'</span><span>'+bn(n)+'টি পণ্য'+(o.note?' · '+esc(o.note):'')+'</span></div></div>';
+}
+var fmt = 'memo', mfmt = 'memo', cur = null;
+function paper(o,f){ return f==='slip' ? slipHTML(o) : memoHTML(o); }
+
+/* ===== নতুন অর্ডার ফর্ম ===== */
+var rid = 0;
+function addRow(n,q,p){
+  var i = rid++, d = document.createElement('div'); d.className = 'it';
+  d.innerHTML = '<input id="in'+i+'" class="in-n" list="dl" placeholder="পণ্যের নাম" aria-label="পণ্যের নাম" value="'+esc(n||'')+'"><input id="iq'+i+'" class="in-q" inputmode="numeric" aria-label="পরিমাণ" value="'+esc(q||'১')+'"><input id="ip'+i+'" class="in-p" inputmode="decimal" placeholder="০" aria-label="দাম" value="'+esc(p||'')+'"><button class="rmv" type="button" aria-label="সরান">×</button>';
+  $('items').appendChild(d);
+}
+function draft(){
+  var items = Array.prototype.map.call($('items').children,function(r){
+    return { n:r.querySelector('.in-n').value.trim(), q:num(r.querySelector('.in-q').value)||1, p:num(r.querySelector('.in-p').value) }; });
+  return { ts:Date.now(), cust:{name:$('cn').value.trim(), phone:$('cm').value.trim(), addr:$('ca').value.trim()}, items:items, del:num($('cd').value), disc:num($('cx').value), adv:num($('ad').value), note:$('cnote').value.trim(), status:'new' };
+}
+function refresh(){
+  var d = draft(), c = calc(d);
+  $('sum').innerHTML = '<div><span>পণ্যের দাম</span><b>'+money(c.sub)+'</b></div><div><span>মোট</span><b>'+money(c.total)+'</b></div><div class="due"><span>ডেলিভারির সময় নেবেন</span><b>'+money(c.due)+'</b></div>';
+  $('live').innerHTML = paper(d, fmt);
+  $('lh').textContent = pro() ? 'প্রো: সীমাহীন মেমো।' : 'ফ্রিতে আর '+bn(left())+'টি মেমো বাকি আছে।';
+  $('setupcard').hidden = !!(S.settings.shop && S.settings.phone);
+}
+function fillDL(){
+  var seen = {}, html = '';
+  S.orders.forEach(function(o){ o.items.forEach(function(i){ if (i.n && !seen[i.n]){ seen[i.n] = i.p; html += '<option value="'+esc(i.n)+'">'; } }); });
+  $('dl').innerHTML = html; $('dl')._p = seen;
+}
+function clearForm(){
+  ['cn','cm','ca','cd','cx','ad','cnote'].forEach(function(i){ $(i).value = ''; });
+  $('items').innerHTML = ''; addRow(); refresh();
+  ['e-cn','e-cm','e-ca','e-it'].forEach(function(i){ $(i).textContent = ''; });
+}
+function demo(){
+  $('cn').value = 'রাফি আহমেদ'; $('cm').value = '01712345678'; $('ca').value = 'মিরপুর ১০, ঢাকা';
+  $('items').innerHTML = ''; addRow('কটন থ্রিপিস','১','১২৫০'); addRow('হিজাব','২','২২০');
+  $('cd').value = '৬০'; $('cx').value = '৫০'; $('ad').value = '৫০০'; $('cnote').value = 'উদাহরণ: সকালে ডেলিভারি দেবেন';
+  refresh();
+}
+function validate(){
+  var ok = true, d = draft();
+  ['e-cn','e-cm','e-ca','e-it'].forEach(function(i){ $(i).textContent = ''; });
+  ['cn','cm','ca'].forEach(function(i){ $(i).setAttribute('aria-invalid','false'); });
+  if (d.cust.name.length < 2){ $('e-cn').textContent = 'ক্রেতার নাম লিখুন।'; $('cn').setAttribute('aria-invalid','true'); ok = false; }
+  if (!okPhone(d.cust.phone)){ $('e-cm').textContent = 'সঠিক মোবাইল নম্বর লিখুন, যেমন 01712345678।'; $('cm').setAttribute('aria-invalid','true'); ok = false; }
+  if (d.cust.addr.length < 4){ $('e-ca').textContent = 'ঠিকানা লিখুন।'; $('ca').setAttribute('aria-invalid','true'); ok = false; }
+  if (!d.items.some(function(i){ return i.n && i.p>0; })){ $('e-it').textContent = 'অন্তত একটা পণ্যের নাম আর দাম দিন।'; ok = false; }
+  return ok;
+}
+function create(){
+  if (!(S.settings.shop && S.settings.phone)){ tab('set'); toast('আগে দোকানের নাম আর নম্বর দিন।'); return; }
+  if (!validate()) { var e = document.querySelector('.err:not(:empty)'); if (e) e.scrollIntoView({block:'center',behavior:'smooth'}); return; }
+  if (!pro() && S.created >= APP.freeMemos){ openPay(); return; }
+  var d = draft(); d.cust.phone = phone11(d.cust.phone); d.items = d.items.filter(function(i){ return i.n && i.p>0; });
+  d.no = S.nextNo++; d.id = 'o'+Date.now(); S.created++; S.orders.unshift(d); save(); fillDL(); hdr();
+  clearForm(); showMemo(d);
+}
+
+/* ===== মেমো দেখানো, ছবি, প্রিন্ট ===== */
+function showMemo(o, f){
+  cur = o; mfmt = f || 'memo';
+  Array.prototype.forEach.call(document.querySelectorAll('[data-mfmt]'),function(b){ b.setAttribute('aria-pressed', b.dataset.mfmt===mfmt); });
+  $('mpaper').innerHTML = paper(o, mfmt);
+  $('mt1').textContent = ono(o);
+  $('mwa').href = 'https://wa.me/88'+phone11(o.cust.phone)+'?text='+encodeURIComponent('আসসালামু আলাইকুম '+o.cust.name+', '+(S.settings.shop||'')+' থেকে আপনার অর্ডার ('+ono(o)+') নিশ্চিত হয়েছে। মোট '+money(calc(o).total)+(calc(o).due>0?', ডেলিভারির সময় '+money(calc(o).due)+' দিতে হবে।':', টাকা পরিশোধিত।')+' ধন্যবাদ।');
+  $('mhint').textContent = ''; $('ovm').hidden = false; document.body.classList.add('lock');
+}
+function closeMemo(){ $('ovm').hidden = true; document.body.classList.remove('lock'); }
+function shareImage(){
+  var el = $('mpaper').firstChild;
+  if (!window.html2canvas){ $('mhint').textContent = 'ছবি তৈরি করা যাচ্ছে না। ইন্টারনেট চালু করে আবার চেষ্টা করুন, বা প্রিন্ট চাপুন।'; return; }
+  $('mhint').textContent = 'ছবি তৈরি হচ্ছে…';
+  html2canvas(el,{scale:2,backgroundColor:'#ffffff'}).then(function(cv){
+    cv.toBlob(function(b){
+      var name = ono(cur)+'.png', f;
+      try { f = new File([b], name, {type:'image/png'}); } catch(e){ f = null; }
+      if (f && navigator.canShare && navigator.canShare({files:[f]})){
+        navigator.share({files:[f], title:name}).then(function(){ $('mhint').textContent = ''; }, function(){ $('mhint').textContent = 'শেয়ার বন্ধ হয়েছে।'; });
+      } else {
+        var a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+        $('mhint').textContent = 'ছবি ফোনে সেভ হয়েছে। এবার WhatsApp-এ পাঠান।';
+      }
+    },'image/png');
+  }).catch(function(){ $('mhint').textContent = 'ছবি তৈরি হয়নি। প্রিন্ট চাপুন।'; });
+}
+function printIt(){
+  $('pa').innerHTML = paper(cur, mfmt);
+  var st = document.getElementById('pgs') || document.head.appendChild(Object.assign(document.createElement('style'),{id:'pgs'}));
+  st.textContent = '@page{margin:8mm;size:'+(mfmt==='slip'?'A6':'A5')+'}';
+  setTimeout(function(){ window.print(); }, 60);
+}
+
+/* ===== অর্ডার তালিকা ===== */
+var sfv = 'all';
+function renderList(){
+  $('sf').innerHTML = [['all','সব']].concat(STATUS.map(function(s){ return [s[0],s[1]]; })).map(function(s){
+    var n = s[0]==='all' ? S.orders.length : S.orders.filter(function(o){ return o.status===s[0]; }).length;
+    return '<button class="chip" type="button" data-sf="'+s[0]+'" aria-pressed="'+(s[0]===sfv)+'">'+s[1]+' ('+bn(n)+')</button>'; }).join('');
+  var q = $('q').value.trim().toLowerCase().replace(/[০-৯]/g,function(c){ return BD[c]; });
+  var list = S.orders.filter(function(o){
+    if (sfv!=='all' && o.status!==sfv) return false;
+    if (!q) return true;
+    return (o.cust.name+' '+o.cust.phone+' '+ono(o)).toLowerCase().indexOf(q) >= 0; });
+  if (!S.orders.length){ $('ol').innerHTML = '<div class="empty"><p>এখনো কোনো অর্ডার নেই।</p><button class="btn" type="button" data-tab="new">প্রথম মেমো বানান</button></div>'; return; }
+  if (!list.length){ $('ol').innerHTML = '<div class="empty"><p>কিছু পাওয়া যায়নি।</p></div>'; return; }
+  $('ol').innerHTML = list.map(function(o){
+    var c = calc(o), st = STATUS.filter(function(s){ return s[0]===o.status; })[0] || STATUS[0];
+    var opts = STATUS.map(function(s){ return '<option value="'+s[0]+'"'+(s[0]===o.status?' selected':'')+'>'+s[1]+'</option>'; }).join('');
+    return '<article class="ocard"><div class="h"><b>'+esc(o.cust.name)+'</b><span>'+esc(ono(o))+' · '+esc(fdate(o.ts))+'</span></div>'
+      +'<div class="m">'+esc(o.cust.phone)+' · '+esc(o.cust.addr)+'</div>'
+      +'<div class="m">'+o.items.map(function(i){ return esc(i.n)+(i.q>1?' × '+bn(i.q):''); }).join(', ')+'</div>'
+      +'<div class="money"><span class="'+st[2]+'">'+st[1]+'</span><span>মোট <b>'+money(c.total)+'</b>'+(c.due>0&&o.status!=='done'&&o.status!=='ret'?' · নেবেন '+money(c.due):'')+'</span></div>'
+      +'<div class="acts"><select data-st="'+o.id+'" aria-label="অবস্থা">'+opts+'</select><button class="btn ghost sm" type="button" data-view="'+o.id+'">মেমো</button><button class="btn ghost sm" type="button" data-slip="'+o.id+'">স্লিপ</button><button class="btn danger sm" type="button" data-del="'+o.id+'">মুছুন</button></div></article>'; }).join('');
+}
+
+/* ===== হিসাব ===== */
+function dkey(ts){ var d = new Date(ts); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+function renderStats(){
+  var live = S.orders.filter(function(o){ return o.status!=='ret'; });
+  var now = new Date(), tk = dkey(now), mk = now.getFullYear()+'-'+now.getMonth();
+  var tod = live.filter(function(o){ return dkey(o.ts)===tk; }), mon = live.filter(function(o){ var d = new Date(o.ts); return d.getFullYear()+'-'+d.getMonth()===mk; });
+  var sum = function(l){ return l.reduce(function(s,o){ return s + calc(o).total; },0); };
+  var pend = live.filter(function(o){ return o.status!=='done'; }).reduce(function(s,o){ return s + calc(o).due; },0);
+  var pendN = live.filter(function(o){ return o.status!=='done' && calc(o).due>0; }).length;
+  var days = [], mx = 1;
+  for (var i=6;i>=0;i--){ var d = new Date(now.getFullYear(),now.getMonth(),now.getDate()-i), k = dkey(d), v = sum(live.filter(function(o){ return dkey(o.ts)===k; })); mx = Math.max(mx,v); days.push({d:d,v:v,t:i===0}); }
+  var wd = ['রবি','সোম','মঙ্গল','বুধ','বৃহ','শুক্র','শনি'];
+  $('st').innerHTML = '<div class="tiles">'
+    +'<div class="tile g"><small>আজকের বিক্রি</small><b>'+money(sum(tod))+'</b><small>'+bn(tod.length)+'টি অর্ডার</small></div>'
+    +'<div class="tile g"><small>এই মাসের বিক্রি</small><b>'+money(sum(mon))+'</b><small>'+bn(mon.length)+'টি অর্ডার</small></div>'
+    +'<div class="tile m"><small>ক্যাশ পাওনা (ডেলিভারি বাকি)</small><b>'+money(pend)+'</b><small>'+bn(pendN)+'টি অর্ডারে</small></div>'
+    +'<div class="tile"><small>ডেলিভারি হয়েছে</small><b>'+bn(S.orders.filter(function(o){ return o.status==='done'; }).length)+'</b><small>ফেরত '+bn(S.orders.filter(function(o){ return o.status==='ret'; }).length)+'</small></div></div>'
+    +'<div class="card"><h3>গত ৭ দিনের বিক্রি</h3><div class="bars">'+days.map(function(x){ return '<div class="bar'+(x.t?' today':'')+'"><b>'+(x.v?bn(Math.round(x.v)):'')+'</b><i style="height:'+Math.max(3,Math.round(x.v/mx*100))+'px"></i><span>'+wd[x.d.getDay()]+'</span></div>'; }).join('')+'</div></div>'
+    +(S.orders.length?'':'<div class="empty"><p>অর্ডার যোগ করলে এখানে হিসাব দেখাবে।</p></div>');
+}
+
+/* ===== সেটিংস, আনলক ===== */
+function fillSet(){
+  var s = S.settings;
+  $('s-shop').value = s.shop; $('s-phone').value = s.phone; $('s-addr').value = s.addr; $('s-note').value = s.note;
+  $('s-in').value = s.chIn?bn(s.chIn):''; $('s-out').value = s.chOut?bn(s.chOut):''; $('s-pre').value = s.pre;
+  $('lg-s').textContent = s.logo ? 'লোগো দেওয়া আছে' : ''; $('lg-x').hidden = !s.logo;
+  $('licard').innerHTML = pro()
+    ? '<h3>প্রো চালু আছে</h3><p class="hint">সীমাহীন মেমো বানাতে পারবেন। ধন্যবাদ।</p>'
+    : '<h3>ফ্রি ব্যবহার</h3><p class="hint">'+bn(APP.freeMemos)+'টি মেমো ফ্রি। আপনি '+bn(S.created)+'টি বানিয়েছেন। সীমাহীন মেমোর জন্য '+APP.price+', একবারেই।</p><div class="acts"><button class="btn" type="button" id="unl">আনলক করুন</button></div>';
+}
+function saveSet(e){
+  e.preventDefault();
+  var ok = true; $('e-shop').textContent = ''; $('e-phone').textContent = '';
+  if ($('s-shop').value.trim().length < 2){ $('e-shop').textContent = 'দোকানের নাম লিখুন।'; ok = false; }
+  if (!okPhone($('s-phone').value)){ $('e-phone').textContent = 'সঠিক মোবাইল নম্বর লিখুন।'; ok = false; }
+  if (!ok) return;
+  var s = S.settings; s.shop = $('s-shop').value.trim(); s.phone = phone11($('s-phone').value); s.addr = $('s-addr').value.trim(); s.note = $('s-note').value.trim();
+  s.chIn = num($('s-in').value); s.chOut = num($('s-out').value); s.pre = ($('s-pre').value.trim()||'ORD').toUpperCase();
+  save(); fillSet(); chips(); refresh(); toast('সেভ হয়েছে।');
+}
+function chips(){
+  var s = S.settings, h = '';
+  if (s.chIn) h += '<button class="chip" type="button" data-dc="'+s.chIn+'">ডেলিভারি '+money(s.chIn)+'</button>';
+  if (s.chOut) h += '<button class="chip" type="button" data-dc="'+s.chOut+'">ডেলিভারি '+money(s.chOut)+'</button>';
+  $('dch').innerHTML = h; $('dch').hidden = !h;
+}
+function openPay(){
+  if (!(S.settings.phone)){ tab('set'); toast('আগে দোকানের নম্বর দিন।'); return; }
+  $('ptx').textContent = bn(APP.freeMemos)+'টি ফ্রি মেমো ব্যবহার হয়ে গেছে। সীমাহীন মেমোর জন্য '+APP.price+' (একবারেই)। টাকা পাঠিয়ে আমাদের জানালে আপনার নম্বরের জন্য একটা কোড পাবেন।';
+  $('pn').textContent = APP.nagad;
+  $('pw').href = 'https://wa.me/'+APP.whatsapp+'?text='+encodeURIComponent('আসসালামু আলাইকুম, সেলার মেমো আনলক করতে নগদে '+APP.price+' পাঠিয়েছি। আমার দোকানের নম্বর: '+S.settings.phone+'। কোডটা পাঠাবেন।');
+  $('e-pcode').textContent = ''; $('pcode').value = ''; $('ovp').hidden = false; document.body.classList.add('lock');
+}
+function unlock(){
+  var c = String($('pcode').value).replace(/[০-৯]/g,function(x){ return BD[x]; }).trim();
+  if (c && c === codeFor(S.settings.phone)){ S.settings.code = c; save(); $('ovp').hidden = true; document.body.classList.remove('lock'); fillSet(); refresh(); hdr(); toast('আনলক হয়েছে। এবার সীমাহীন মেমো বানান।'); }
+  else $('e-pcode').textContent = 'কোডটা মেলেনি। দোকানের নম্বর ঠিক আছে কি না দেখুন, আর কোডটা আবার লিখুন।';
+}
+function hdr(){
+  var b = $('lic');
+  if (pro()){ b.textContent = 'প্রো'; b.className = 'pill pro'; }
+  else { b.textContent = 'ফ্রি: '+bn(left())+' বাকি'; b.className = 'pill'+(left()<=3?' low':''); }
+}
+
+/* ===== ট্যাব ===== */
+function tab(n){
+  ['new','list','stats','set'].forEach(function(k){ $('v-'+k).hidden = k!==n; });
+  Array.prototype.forEach.call(document.querySelectorAll('nav.tabs button'),function(b){ if (b.dataset.tab===n) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+  if (n==='list') renderList(); if (n==='stats') renderStats(); if (n==='set') fillSet();
+  window.scrollTo({top:0});
+}
+
+/* ===== ঘটনা ===== */
+document.addEventListener('click',function(e){
+  var t;
+  if ((t = e.target.closest('[data-tab]'))){ tab(t.dataset.tab); return; }
+  if ((t = e.target.closest('[data-fmt]'))){ fmt = t.dataset.fmt; Array.prototype.forEach.call(document.querySelectorAll('[data-fmt]'),function(b){ b.setAttribute('aria-pressed', b.dataset.fmt===fmt); }); refresh(); return; }
+  if ((t = e.target.closest('[data-mfmt]'))){ showMemo(cur, t.dataset.mfmt); return; }
+  if ((t = e.target.closest('[data-sf]'))){ sfv = t.dataset.sf; renderList(); return; }
+  if ((t = e.target.closest('[data-dc]'))){ $('cd').value = bn(t.dataset.dc); refresh(); return; }
+  var byid = function(id){ return S.orders.filter(function(o){ return o.id===id; })[0]; };
+  if ((t = e.target.closest('[data-view]'))){ showMemo(byid(t.dataset.view),'memo'); return; }
+  if ((t = e.target.closest('[data-slip]'))){ showMemo(byid(t.dataset.slip),'slip'); return; }
+  if ((t = e.target.closest('[data-del]'))){
+    if (t.dataset.arm!=='1'){ t.dataset.arm = '1'; t.textContent = 'নিশ্চিত?'; setTimeout(function(){ t.dataset.arm = ''; t.textContent = 'মুছুন'; },2500); return; }
+    S.orders = S.orders.filter(function(o){ return o.id!==t.dataset.del; }); save(); renderList(); fillDL(); return; }
+  if (e.target.closest('.rmv')){ var r = e.target.closest('.it'); if ($('items').children.length>1) r.remove(); else { r.querySelectorAll('input').forEach(function(i,k){ i.value = k===1?'১':''; }); } refresh(); return; }
+  if (e.target.closest('#unl')) openPay();
+});
+document.addEventListener('input',function(e){
+  if (e.target.closest('#f')){
+    if (e.target.classList.contains('in-n')){ var p = $('dl')._p && $('dl')._p[e.target.value]; var row = e.target.closest('.it'); if (p && !row.querySelector('.in-p').value) row.querySelector('.in-p').value = bn(p); }
+    refresh();
+  }
+  if (e.target.id==='q') renderList();
+});
+document.addEventListener('change',function(e){
+  var t = e.target.closest('[data-st]');
+  if (t){ var o = S.orders.filter(function(x){ return x.id===t.dataset.st; })[0]; if (o){ o.status = t.value; save(); renderList(); } }
+});
+$('f').addEventListener('submit',function(e){ e.preventDefault(); create(); });
+$('addit').addEventListener('click',function(){ addRow(); var l = $('items').lastChild.querySelector('input'); if (l) l.focus(); });
+$('demo').addEventListener('click',demo);
+$('clr').addEventListener('click',clearForm);
+$('sf2').addEventListener('submit',saveSet);
+$('lic').addEventListener('click',function(){ if (pro()) tab('set'); else { if (S.settings.phone) openPay(); else { tab('set'); toast('আগে দোকানের নম্বর দিন।'); } } });
+$('mx').addEventListener('click',closeMemo);
+$('ovm').addEventListener('mousedown',function(e){ if (e.target===$('ovm')) closeMemo(); });
+$('mimg').addEventListener('click',shareImage);
+$('mprint').addEventListener('click',printIt);
+$('px').addEventListener('click',function(){ $('ovp').hidden = true; document.body.classList.remove('lock'); });
+$('pu').addEventListener('click',unlock);
+$('pc').addEventListener('click',function(){ var b = $('pc'); var done = function(){ b.textContent = 'কপি হয়েছে'; setTimeout(function(){ b.textContent = 'কপি'; },1500); }; try { navigator.clipboard.writeText(APP.nagad).then(done,function(){ b.textContent = APP.nagad; }); } catch(x){ b.textContent = APP.nagad; } });
+document.addEventListener('keydown',function(e){ if (e.key==='Escape'){ if (!$('ovp').hidden){ $('px').click(); } else if (!$('ovm').hidden) closeMemo(); } });
+$('s-logo').addEventListener('change',function(){
+  var f = this.files && this.files[0]; if (!f) return;
+  var r = new FileReader(); r.onload = function(){
+    var im = new Image(); im.onload = function(){
+      var s = 160, cv = document.createElement('canvas'); cv.width = s; cv.height = s; var x = cv.getContext('2d');
+      var m = Math.min(im.width, im.height), sx = (im.width-m)/2, sy = (im.height-m)/2;
+      x.fillStyle = '#fff'; x.fillRect(0,0,s,s); x.drawImage(im,sx,sy,m,m,0,0,s,s);
+      S.settings.logo = cv.toDataURL('image/jpeg',.85); save(); fillSet(); refresh(); toast('লোগো বসেছে।'); };
+    im.src = r.result; };
+  r.readAsDataURL(f);
+});
+$('lg-x').addEventListener('click',function(){ S.settings.logo = ''; save(); fillSet(); refresh(); });
+$('bk').addEventListener('click',function(){
+  var b = new Blob([JSON.stringify(S)],{type:'application/json'}), a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = 'seller-memo-backup-'+dkey(Date.now())+'.json'; document.body.appendChild(a); a.click(); a.remove();
+  $('bk-s').textContent = 'ব্যাকআপ ফাইল ফোনে সেভ হয়েছে। এটা নিরাপদ জায়গায় রাখুন।';
+});
+$('rs').addEventListener('change',function(){
+  var f = this.files && this.files[0]; if (!f) return;
+  var r = new FileReader(); r.onload = function(){ try { var v = JSON.parse(r.result); if (!v || !v.settings || !Array.isArray(v.orders)) throw 0; S = v; save(); fillDL(); fillSet(); chips(); refresh(); hdr(); $('bk-s').textContent = 'ব্যাকআপ ফিরে এসেছে।'; } catch(x){ $('bk-s').textContent = 'এই ফাইলটা ব্যাকআপ ফাইল নয়।'; } };
+  r.readAsText(f);
+});
+$('wipe').addEventListener('click',function(){
+  var b = $('wipe');
+  if (b.dataset.arm!=='1'){ b.dataset.arm = '1'; b.textContent = 'নিশ্চিত? আবার চাপুন'; setTimeout(function(){ b.dataset.arm = ''; b.textContent = 'সব মুছুন'; },3000); return; }
+  try { localStorage.removeItem(KEY); } catch(e){}
+  S = { settings:{shop:'',phone:'',addr:'',note:'ধন্যবাদ, আবার আসবেন',pre:'ORD',chIn:0,chOut:0,logo:'',code:''}, orders:[], created:0, nextNo:1 };
+  b.dataset.arm = ''; b.textContent = 'সব মুছুন'; fillSet(); fillDL(); chips(); clearForm(); hdr(); toast('সব মুছে গেছে।');
+});
+
+load(); fillDL(); chips(); addRow(); hdr(); refresh();
+/* প্রথমবার খুললে একটা উদাহরণ বসানো থাকে, যাতে টুলটা কেমন কাজ করে দেখা যায় */
+if (!S.orders.length && !S.settings.shop){ demo(); }
+</script>
+
+</body>
+</html>
